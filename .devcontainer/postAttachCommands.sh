@@ -4,3 +4,5 @@
 
 pip3 install --user pipreqs pytest pytest-cov flake8 auto8
 pip3 install --user -r requirements.txt
+
+npm ci

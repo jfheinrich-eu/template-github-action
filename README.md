@@ -1,23 +1,23 @@
 <p align="center">
   <a href="" rel="noopener">
- <img width=200px height=200px src="https://i.imgur.com/6wj0hh6.jpg" alt="Project logo"></a>
+ <img width=200px height=200px src="https://imgur.com/r85zecB.png" alt="Template Repository: GitHub Actions"></a>
 </p>
 
-<h3 align="center">Project Title</h3>
+<h3 align="center">Template Repository: GitHub Actions</h3>
 
 <div align="center">
 
 [![Status](https://img.shields.io/badge/status-active-success.svg)]()
 ![Maintainer](https://img.shields.io/badge/maintainer-@jfheinrich-blue)
-[![GitHub Issues](https://img.shields.io/github/issues/jfheinrich-eu/[project name].svg)](https://github.com/jfheinrich-eu/[project name]/issues)
-[![GitHub pull-requests](https://img.shields.io/github/issues-pr/jfheinrich-eu/[project name].svg)](https://GitHub.com/Naereen/StrapDown.js/pull/)
+[![GitHub Issues](https://img.shields.io/github/issues/jfheinrich-eu/template-github-action.svg)](https://github.com/jfheinrich-eu/template-github-action/issues)
+[![GitHub pull-requests](https://img.shields.io/github/issues-pr/jfheinrich-eu/template-github-action.svg)](https://GitHub.com/Naereen/StrapDown.js/pull/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](/LICENSE)
 
 </div>
 
 ---
 
-<p align="center"> Few lines describing your project.
+<p align="center"> Template repository for GitHub Actions written in Python
     <br>
 </p>
 
@@ -26,94 +26,369 @@
 - [📝 Table of Contents](#-table-of-contents)
 - [🧐 About ](#-about)
 - [🏁 Getting Started ](#-getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installing](#installing)
-- [🔧 Running the tests ](#-running-the-tests)
-  - [Break down into end to end tests](#break-down-into-end-to-end-tests)
-  - [And coding style tests](#and-coding-style-tests)
+  - [GitHub Workflow](#github-workflow)
+    - [integration.yml](#integrationyml)
+    - [python.yml](#pythonyml)
+    - [release.yml](#releaseyml)
+    - [pr\_labler.yml](#pr_lableryml)
+  - [pr.yml](#pryml)
+    - [tag.yml](#tagyml)
 - [🎈 Usage ](#-usage)
-- [🚀 Deployment ](#-deployment)
-- [⛏️ Built Using ](#️-built-using)
 - [✍️ Authors ](#️-authors)
 - [🎉 Acknowledgements ](#-acknowledgements)
 
 ## 🧐 About <a name = "about"></a>
 
-Write about 1-2 paragraphs describing the purpose of your project.
+This template should be the starting point for develop GitHub Actions in `python`.
 
 ## 🏁 Getting Started <a name = "getting_started"></a>
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See [deployment](#deployment) for notes on how to deploy the project on a live system.
+This template repository provides a skeleton to invent a docker containernized GitHub Action written in `python`. It provides a workflow skeleton:
 
-### Prerequisites
+- on `push`
+  - all branches
+    - integration.yml
+    - python.yml
+  - branches: `main, master`
+    - release.yml
+- on `pull_request_target`
+  - pr_labler.yml
+- on `pull_request`
+  - types: `labeled, unlabeled, opened, edited, reopened, synchronize, ready_for_review`
+    - pr.yml
+- on `push`
+  - type: `tag`
+    - tag.yml
 
-What things you need to install the software and how to install them.
+### GitHub Workflow
 
+#### integration.yml
+
+This workflow is for code quality and testing
+
+```yaml
+name: Integration Test
+permissions:
+  contents: read
+  pull-requests: write
+
+on: [push]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5.5.0
+        with:
+          python-version: "3.9"
+
+      - name: Lint
+        run: |
+          pip install flake8
+          cd src && flake8 *.py
+
+      - name: Tests
+        run: |
+          pip install pytest pytest-cov
+          pytest --cov=github-action --pyargs github-action
 ```
-Give examples
+
+#### python.yml
+
+This workflow creates or updates the `requirements.txt` file.
+
+```yaml
+name: Lint
+permissions:
+  contents: write
+  pull-requests: write
+
+on: [push]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5.5.0
+        with:
+          python-version: "3.9"
+
+      - uses: actions/checkout@v4
+
+      - name: Lint
+        run: |
+          pip install flake8
+          flake8 main.py
+
+      - name: Automatic requirements.txt for Python Project
+        uses: jfheinrich-eu/pipreqs-action@v4.1.0
+        with:
+          PROJECT_PATH: .
+          REQUIREMENT_PATH: requirements.txt
+          RECURSIVE: "false"
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            src:
+              - 'requirements.txt'
+
+      - name: Commit changes
+        if: steps.changes.outputs.src == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          branch: ${{ github.ref_name }}
+          commit_message: 'Updated requirements file on ${{ github.ref_name }} [skip-ci]'
+          file_pattern: requirements.txt
 ```
 
-### Installing
+#### release.yml
 
-A step by step series of examples that tell you how to get a development env running.
+This workflow provides the tagging, release creation and creation of the release notes.
 
-Say what the step will be
+To create the release notes it use the commit message block between these markers:
 
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
+```html
+<!--- START AUTOGENERATED NOTES --->
+<!--- END AUTOGENERATED NOTES --->
 ```
 
-End with an example of getting some data out of the system or using it for a little demo.
+The generated version number is `v` prefixed.
 
-## 🔧 Running the tests <a name = "tests"></a>
+```yaml
+name: Release
 
-Explain how to run the automated tests for this system.
+on:
+  push:
+    branches:
+      - main
+      - master
 
-### Break down into end to end tests
+jobs:
+  bump-tag-version:
+    name: Bump and Tag Version
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      PSONO_CI_API_KEY_ID: ${{ secrets.PSONO_API_KEY_ID }}
+      PSONO_CI_API_SECRET_KEY_HEX: ${{ secrets.PSONO_API_SECRET_KEY_HEX }}
+      PSONO_CI_SERVER_URL: ${{ vars.PSONO_SERVER_URL }}
+      PSONO_GITHUB_TOKEN_ID: ${{ secrets.PSONO_GITHUB_CLI_TOKEN}}
 
-Explain what these tests test and why
+    steps:
+      - uses: actions/checkout@v4
 
+      - name: Fetch secrets
+        id: fetch-secrets
+        uses: jfheinrich-eu/psono-secret-whisperer@v1.0.0
+        with:
+          ci_api_key_id: ${{ secrets.PSONO_API_KEY_ID }}
+          ci_api_secret_key_hex: ${{ secrets.PSONO_API_SECRET_KEY_HEX }}
+          ci_server_url: 'https://your-psono-server.com'
+          secret_id: ${{ secrets.PSONO_GITHUB_CLI_TOKEN }}
+          secret_type: 'secret'
+          secret_fields: 'password'
+          mask_secrets: 'password'
+
+      - uses: jefflinse/pr-semver-bump@v1.7.2
+        name: Bump and Tag Version
+        with:
+          mode: bump
+          repo-token: ${{ steps.fetch-secrets.outputs.secret1 }}
+          major-label: major release
+          minor-label: minor release
+          patch-label: patch release
+          noop-labels: |
+            documentation change
+            skip-release
+            dependencies
+          require-release-notes: true
+          release-notes-prefix: '<!--- START AUTOGENERATED NOTES --->'
+          release-notes-suffix: '<!--- END AUTOGENERATED NOTES --->'
+          with-v: true
+          base-branch: false
 ```
-Give an example
+
+#### pr_labler.yml
+
+Provides an automatically labeling on new pull requests, based on the files in the commit
+
+```yaml
+name: Pull Request Labeler
+permissions:
+  contents: read
+  pull-requests: write
+on: pull_request_target
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/pr_labeler.yml
+          sync-labels: false
 ```
 
-### And coding style tests
+### pr.yml
 
-Explain what these tests test and why
+Generates the pull request description
 
+```yaml
+name: Release Info
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+    types: [labeled, unlabeled, opened, edited, reopened, synchronize, ready_for_review]
+
+jobs:
+  generate-pr-description:
+    name: Generate the description on the pull request
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: octue/generate-pull-request-description@1.0.0.beta-2
+        id: pr-description
+        with:
+          pull_request_url: ${{ github.event.pull_request.url }}
+          api_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update pull request body
+        uses: riskledger/update-pr-description@v2
+        with:
+          body: ${{ steps.pr-description.outputs.pull_request_description }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  check-pr:
+    if: ${{ github.actor != 'dependabo[bot]' }}
+    needs: generate-pr-description
+    name: Validate Release Label and Notes
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch secrets
+        id: fetch-secrets
+        uses: jfheinrich-eu/psono-secret-whisperer@v1.0.0
+        with:
+          ci_api_key_id: ${{ secrets.PSONO_API_KEY_ID }}
+          ci_api_secret_key_hex: ${{ secrets.PSONO_API_SECRET_KEY_HEX }}
+          ci_server_url: 'https://your-psono-server.com'
+          secret_id: ${{ secrets.PSONO_GITHUB_CLI_TOKEN }}
+          secret_type: 'secret'
+          secret_fields: 'password'
+          mask_secrets: 'password'
+
+      - uses: jefflinse/pr-semver-bump@v1.7.2
+        name: Validate Pull Request Metadata
+        with:
+          mode: validate
+          repo-token: ${{ steps.fetch-secrets.outputs.secret1 }}
+          major-label: major release
+          minor-label: minor release
+          patch-label: patch release
+          noop-labels: |
+            documentation change
+            dependencies
+            skip-release
+          require-release-notes: true
+          release-notes-prefix: '<!--- START AUTOGENERATED NOTES --->'
+          release-notes-suffix: '<!--- END AUTOGENERATED NOTES --->'
+          with-v: false
+          base-branch: false
 ```
-Give an example
+
+#### tag.yml
+
+This workflow runs on a release tqag, e.g. `vf1.5.20` and generates the `CHANGELOG.md` file.
+
+```yaml
+name: Create new release
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update CHANGELOG
+        id: changelog
+        uses: requarks/changelog-action@v1
+        with:
+          token: ${{ github.token }}
+          tag: ${{ github.ref_name }}
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: 'Release ${{ github.ref_name }}'
+          body: ${{ steps.changelog.outputs.changes }}
+
+      - name: Commit CHANGELOG.md
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          branch: master
+          commit_message: 'docs: update CHANGELOG.md for ${{ github.ref_name }} [skip ci]'
+          file_pattern: CHANGELOG.md
 ```
 
 ## 🎈 Usage <a name="usage"></a>
 
-Add notes about how to use the system.
-
-## 🚀 Deployment <a name = "deployment"></a>
-
-Add additional notes about how to deploy this on a live system.
-
-## ⛏️ Built Using <a name = "built_using"></a>
-
-- [MongoDB](https://www.mongodb.com/) - Database
-- [Express](https://expressjs.com/) - Server Framework
-- [VueJs](https://vuejs.org/) - Web Framework
-- [NodeJs](https://nodejs.org/en/) - Server Environment
+To use this template, you have to click on `Use this template` on the [GitHub repository page](https://github.com/jfheinrich-eu/template-github-action).
 
 ## ✍️ Authors <a name = "authors"></a>
 
 - [@jfheinrich](https://github.com/jfheinrich) - Idea & Initial work
 
-See also the list of [contributors](https://github.com/jfheinrich-eu/[Project Name]/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/jfheinrich-eu/jfheinrich-eu/template-github-action/contributors) who participated in this project.
 
 ## 🎉 Acknowledgements <a name = "acknowledgement"></a>
 
 - Hat tip to anyone whose code was used
-- Inspiration
-- References
+  - [stefanzweifel/git-auto-commit-action](https://github.com/stefanzweifel/git-auto-commit-action)
+  - [actions/create-release](https://github.com/actions/create-release)
+  - [requarks/changelog-action](https://github.com/requarks/changelog-action)
+  - [jefflinse/pr-semver-bump](https://github.com/jefflinse/pr-semver-bump)
+  - [dorny/paths-filter](https://github.com/dorny/paths-filter)
+  - [octue/generate-pull-request-description](https://github.com/octue/generate-pull-request-description)
+  - [riskledger/update-pr-description](https://github.com/riskledger/update-pr-description)
+  - [actions/labeler](riskledger/update-pr-description)
+  - [actions/setup-python](https://github.com/actions/setup-python)
