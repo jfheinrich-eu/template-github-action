@@ -20,7 +20,7 @@ jobs:
       - name: Lint
         run: |
           pip install flake8
-          cd src && flake8 *.py
+          cd src/github-action && flake8 *.py
 
       - name: Tests
         run: |

@@ -20,7 +20,7 @@ jobs:
       - name: Lint
         run: |
           pip install flake8
-          flake8 main.py
+          cd src/github-action && flake8 main.py
 
       - name: Automatic requirements.txt for Python Project
         uses: jfheinrich-eu/pipreqs-action@v4.1.0

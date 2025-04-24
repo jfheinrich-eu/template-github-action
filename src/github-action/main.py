@@ -3,6 +3,7 @@
 import os
 import sys
 
+
 def get_argument(arg_position: int, env_name: str) -> str:
     """
       Helper function to get the program arguments from the commandline or the environment
