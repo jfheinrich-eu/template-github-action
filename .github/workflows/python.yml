@@ -23,7 +23,7 @@ jobs:
           flake8 main.py
 
       - name: Automatic requirements.txt for Python Project
-        uses: jfheinrich-eu/pipreqs-action@v4.1.0
+        uses: jfheinrich-eu/pipreqs-action@v4.2.1
         with:
           PROJECT_PATH: .
           REQUIREMENT_PATH: requirements.txt
