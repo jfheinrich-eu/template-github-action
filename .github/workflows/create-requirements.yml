@@ -1,0 +1,46 @@
+name: Create requirements.txt
+permissions:
+  contents: write
+  pull-requests: write
+
+on: [push]
+
+jobs:
+  create-requirements:
+    name: Create requirements
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12.10
+        uses: actions/setup-python@v5.5.0
+        with:
+          python-version: "3.12.10"
+
+      - name: Install dependencies
+        run: |
+          pip install poetry poetry-plugin-export
+          poetry sync --with test
+
+      - name: Automatic requirements.txt for Python Project
+        run: |
+          poetry export --without-hashes --format=requirements.txt --with test --output tmp_requirements.txt
+          diff requirements.txt tmp_requirements.txt >/dev/null 2>&1
+          if [ $? -ne 0 ]; then mv -f tmp_requirements.txt requirements.txt; fi
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            src:
+              - 'requirements.txt'
+
+      - name: Commit changes
+        if: steps.changes.outputs.src == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          branch: ${{ github.ref_name }}
+          commit_message: 'Updated requirements file on ${{ github.ref_name }} [skip ci]'
+          file_pattern: requirements.txt
+

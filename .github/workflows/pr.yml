@@ -9,6 +9,7 @@ on:
 
 jobs:
   generate-pr-description:
+    if: ${{ github.actor != 'dependabot[bot]' }}
     name: Generate the description on the pull request
     runs-on: ubuntu-latest
     defaults:
@@ -31,7 +32,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   check-pr:
-    if: ${{ github.actor != 'dependabo[bot]' }}
+    if: ${{ github.actor != 'dependabot[bot]' }}
     needs: generate-pr-description
     name: Validate Release Label and Notes
     runs-on: ubuntu-latest
