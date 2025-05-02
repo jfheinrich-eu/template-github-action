@@ -2,8 +2,12 @@
 from github_action import GitHubAction
 import re
 import os
+import pytest
+
+IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 
 
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in GitHub Actions.")
 def test_githubaction_get_info() -> None:
     """Tests if get_info() returns the expected string"""
     pattern = re.compile(

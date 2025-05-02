@@ -32,7 +32,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: jfheinrich-eu/pipreqs-action
+          slug: jfheinrich-eu/template-github-action
           files: coverage/cov.xml
           verbose: true
 

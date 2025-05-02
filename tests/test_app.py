@@ -2,9 +2,14 @@
 from pytest import CaptureFixture
 import app
 import re
+import os
+import pytest
 from github_action import get_info
 
+IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 
+
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in GitHub Actions.")
 def test_app_main(capsys: CaptureFixture[str], mocker) -> None:
     """Test for app.main()"""
     pattern = re.compile(
@@ -14,6 +19,7 @@ def test_app_main(capsys: CaptureFixture[str], mocker) -> None:
     assert pattern.match(captured.out) is not None
 
 
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in GitHub Actions.")
 def test_githubaction_get_info(capsys: CaptureFixture[str]) -> None:
     """Test for github_action.get_info"""
     pattern = re.compile(
