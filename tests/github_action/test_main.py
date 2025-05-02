@@ -8,7 +8,7 @@ IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 
 
 @pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in GitHub Actions.")
-def test_githubaction_get_info() -> None:
+def test_githubaction_get_info() -> None:  # pragma no cover
     """Tests if get_info() returns the expected string"""
     pattern = re.compile(
         r'github-action v[0-9]+\.[0-9]+\.[0-9]+\nCreated by: Joerg Heinrich <joerg@jfheinrich.eu>', re.MULTILINE)

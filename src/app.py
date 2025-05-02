@@ -5,7 +5,7 @@ import sys
 sys.path.append('.')
 
 
-def main() -> None:
+def main() -> None:  # pragma no cover
     print(GitHubAction.get_info())
 
 

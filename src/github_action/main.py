@@ -26,7 +26,7 @@ class GitHubAction:
         return None if env_name is None else os.getenv(env_name)
 
     @staticmethod
-    def get_info() -> str:
+    def get_info() -> str:  # pragma no cover
         return f"{config.PACKAGE_NAME} v{config.__version__}\nCreated by: {config.__author__} <{config.__email__}>"
 
 

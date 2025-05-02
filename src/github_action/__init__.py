@@ -6,7 +6,7 @@ from github_action import main
 GitHubAction = main.GitHubAction
 
 
-def get_info():
+def get_info():  # pragma no cover
     print(
         f"{config.PACKAGE_NAME} v{config.__version__}")
     print(
