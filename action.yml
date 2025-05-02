@@ -1,10 +1,16 @@
-name: ""
-description: ""
-author: "Joperg Heinrich"
+name: "replace-with-your-project"
+description: "enter here your description"
+author: "Joerg Heinrich"
 
 inputs:
+  argument: # id of the input
+    description: "firt input of this action"
+    required: false
+    default: "none"
 
 outputs:
+  sum: # id of the output
+    description: "Describe the output"
 
 runs:
   using: "docker"

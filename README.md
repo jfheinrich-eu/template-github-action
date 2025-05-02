@@ -3,7 +3,7 @@
  <img width=200px height=200px src="https://imgur.com/r85zecB.png" alt="Template Repository: GitHub Actions"></a>
 </p>
 
-<h3 align="center">Template Repository: GitHub Actions</h3>
+<h1 align="center">Template Repository: GitHub Actions</h1>
 
 <div align="center">
 
@@ -21,36 +21,40 @@
     <br>
 </p>
 
-## 📝 Table of Contents
+<h2>Table of Contents</h2>
 
-- [📝 Table of Contents](#-table-of-contents)
-- [🧐 About ](#-about)
-- [🏁 Getting Started ](#-getting-started)
+- [About](#about)
+- [Getting Started](#getting-started)
+  - [Requirements](#requirements)
   - [GitHub Workflow](#github-workflow)
     - [integration.yml](#integrationyml)
-    - [python.yml](#pythonyml)
-    - [release.yml](#releaseyml)
-    - [pr\_labler.yml](#pr_lableryml)
-  - [pr.yml](#pryml)
+    - [create-requirements.yml ](#create-requirementsyml)
     - [tag.yml](#tagyml)
-- [🎈 Usage ](#-usage)
-- [✍️ Authors ](#️-authors)
-- [🎉 Acknowledgements ](#-acknowledgements)
+    - [pr\_labler.yml](#pr_lableryml)
+    - [pr.yml](#pryml)
+    - [release.yml](#releaseyml)
+- [Usage](#usage)
+- [Authors](#authors)
+- [Acknowledgements](#acknowledgements)
 
-## 🧐 About <a name = "about"></a>
 
-This template should be the starting point for develop GitHub Actions in `python`.
 
-## 🏁 Getting Started <a name = "getting_started"></a>
+## About
+
+This template could be the starting point for develop GitHub Actions in `python`.
+
+This project will be maintenance by `poetry`.
+
+## Getting Started
 
 This template repository provides a skeleton to invent a docker containernized GitHub Action written in `python`. It provides a workflow skeleton:
 
 - on `push`
   - all branches
     - integration.yml
-    - python.yml
+    - create-requirements.yml
   - branches: `main, master`
-    - release.yml
+    - tag.yml
 - on `pull_request_target`
   - pr_labler.yml
 - on `pull_request`
@@ -58,7 +62,29 @@ This template repository provides a skeleton to invent a docker containernized G
     - pr.yml
 - on `push`
   - type: `tag`
-    - tag.yml
+    - release.yml
+
+### Requirements
+
+The dependencies are managed by `poetry`, so you have to start, install the base tools:
+
+```bash
+$ cd [project root]
+$ npm ci
+$ pip install poetry
+$ poetry sync --with test
+```
+
+After this, you can customize the skeleton for your project
+
+**pyproject.toml**
+
+```bash
+$ poetry init --name="repalce with your project name" \
+              --author='{name: "replace with authors name", email: "replace with authors email"}' \
+              --license="MIT" \
+              --description="Short description of your package"
+```
 
 ### GitHub Workflow
 
@@ -81,28 +107,46 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.9
+      - name: Set up Python 3.12.10
         uses: actions/setup-python@v5.5.0
         with:
-          python-version: "3.9"
+          python-version: "3.12.10"
+
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install --with test
 
       - name: Lint
-        run: |
-          pip install flake8
-          cd src && flake8 *.py
+        run: poetry run flake8 src/ tests/
 
       - name: Tests
-        run: |
-          pip install pytest pytest-cov
-          pytest --cov=github-action --pyargs github-action
+        run: poetry run pytest --cov --cov-branch --cov-report xml:coverage/cov.xml --cov-report lcov:coverage/cov.info
+
+      - name: Upload results to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: jfheinrich-eu/pipreqs-action
+          files: coverage/cov.xml
+          verbose: true
+
+      - name: Generate Code Coverage report
+        id: code-coverage
+        uses: barecheck/code-coverage-action@v1
+        with:
+          barecheck-github-app-token: ${{ secrets.BARECHECK_GITHUB_APP_TOKEN }}
+          lcov-file: "coverage/cov.info"
+          send-summary-comment: true
+          show-annotations: ''
 ```
 
-#### python.yml
+#### create-requirements.yml <a name="create-requirementsyml">
 
 This workflow creates or updates the `requirements.txt` file.
 
 ```yaml
-name: Lint
+name: Create requirements.txt
 permissions:
   contents: write
   pull-requests: write
@@ -110,28 +154,28 @@ permissions:
 on: [push]
 
 jobs:
-  lint:
-    name: Lint
+  create-requirements:
+    name: Create requirements
     runs-on: ubuntu-latest
-    steps:
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v5.5.0
-        with:
-          python-version: "3.9"
 
+    steps:
       - uses: actions/checkout@v4
 
-      - name: Lint
+      - name: Set up Python 3.12.10
+        uses: actions/setup-python@v5.5.0
+        with:
+          python-version: "3.12.10"
+
+      - name: Install dependencies
         run: |
-          pip install flake8
-          flake8 main.py
+          pip install poetry poetry-plugin-export
+          poetry sync --with test
 
       - name: Automatic requirements.txt for Python Project
-        uses: jfheinrich-eu/pipreqs-action@v4.1.0
-        with:
-          PROJECT_PATH: .
-          REQUIREMENT_PATH: requirements.txt
-          RECURSIVE: "false"
+        run: |
+          poetry export --without-hashes --format=requirements.txt --with test --output tmp_requirements.txt
+          diff requirements.txt tmp_requirements.txt >/dev/null 2>&1
+          if [ $? -ne 0 ]; then mv -f tmp_requirements.txt requirements.txt; fi
 
       - uses: dorny/paths-filter@v3
         id: changes
@@ -145,11 +189,11 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           branch: ${{ github.ref_name }}
-          commit_message: 'Updated requirements file on ${{ github.ref_name }} [skip-ci]'
+          commit_message: 'Updated requirements file on ${{ github.ref_name }} [skip ci]'
           file_pattern: requirements.txt
 ```
 
-#### release.yml
+#### tag.yml
 
 This workflow provides the tagging, release creation and creation of the release notes.
 
@@ -164,6 +208,9 @@ The generated version number is `v` prefixed.
 
 ```yaml
 name: Release
+permissions:
+  contents: write
+  pull-requests: write
 
 on:
   push:
@@ -185,25 +232,25 @@ jobs:
       PSONO_GITHUB_TOKEN_ID: ${{ secrets.PSONO_GITHUB_CLI_TOKEN}}
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Fetch secrets
-        id: fetch-secrets
+      - name: Get GitHub Token
+        id: github-token
         uses: jfheinrich-eu/psono-secret-whisperer@v1.0.0
         with:
           ci_api_key_id: ${{ secrets.PSONO_API_KEY_ID }}
           ci_api_secret_key_hex: ${{ secrets.PSONO_API_SECRET_KEY_HEX }}
-          ci_server_url: 'https://your-psono-server.com'
+          ci_server_url: ${{ vars.PSONO_SERVER_URL }}
           secret_id: ${{ secrets.PSONO_GITHUB_CLI_TOKEN }}
           secret_type: 'secret'
-          secret_fields: 'password'
-          mask_secrets: 'password'
+          secret_fields: "password"
+          mask_secrets: password
+
+      - uses: actions/checkout@v4
 
       - uses: jefflinse/pr-semver-bump@v1.7.2
         name: Bump and Tag Version
         with:
           mode: bump
-          repo-token: ${{ steps.fetch-secrets.outputs.secret1 }}
+          repo-token: ${{ steps.github-token.outputs.secret1 }}
           major-label: major release
           minor-label: minor release
           patch-label: patch release
@@ -240,7 +287,7 @@ jobs:
           sync-labels: false
 ```
 
-### pr.yml
+#### pr.yml
 
 Generates the pull request description
 
@@ -256,6 +303,7 @@ on:
 
 jobs:
   generate-pr-description:
+    if: ${{ github.actor != 'dependabot[bot]' }}
     name: Generate the description on the pull request
     runs-on: ubuntu-latest
     defaults:
@@ -278,7 +326,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   check-pr:
-    if: ${{ github.actor != 'dependabo[bot]' }}
+    if: ${{ github.actor != 'dependabot[bot]' }}
     needs: generate-pr-description
     name: Validate Release Label and Notes
     runs-on: ubuntu-latest
@@ -320,14 +368,14 @@ jobs:
           base-branch: false
 ```
 
-#### tag.yml
+#### release.yml
 
-This workflow runs on a release tqag, e.g. `vf1.5.20` and generates the `CHANGELOG.md` file.
+This workflow runs on a release tag, e.g. `v1.5.20` and generates the `CHANGELOG.md` file.
 
 ```yaml
 name: Create new release
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 on:
@@ -370,17 +418,17 @@ jobs:
           file_pattern: CHANGELOG.md
 ```
 
-## 🎈 Usage <a name="usage"></a>
+## Usage
 
 To use this template, you have to click on `Use this template` on the [GitHub repository page](https://github.com/jfheinrich-eu/template-github-action).
 
-## ✍️ Authors <a name = "authors"></a>
+## Authors
 
 - [@jfheinrich](https://github.com/jfheinrich) - Idea & Initial work
 
 See also the list of [contributors](https://github.com/jfheinrich-eu/jfheinrich-eu/template-github-action/contributors) who participated in this project.
 
-## 🎉 Acknowledgements <a name = "acknowledgement"></a>
+## Acknowledgements
 
 - Hat tip to anyone whose code was used
   - [stefanzweifel/git-auto-commit-action](https://github.com/stefanzweifel/git-auto-commit-action)
