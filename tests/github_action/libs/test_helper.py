@@ -2,6 +2,7 @@
 from git import Repo
 from git.util import IterableList
 from github_action.libs.helper import Helper
+import os
 
 
 class repo_double_tag(Repo):
@@ -23,11 +24,18 @@ class repo_double_branch(Repo):
 
 def test_get_version_tag() -> None:
     """Test if we get the expected tag"""
+    cwd = os.path.realpath(os.path.curdir)
+    print(cwd)
+    os.chdir('./src/github_action')
     vers = Helper.get_version(repository=repo_double_tag)
+    os.chdir(cwd)
     assert vers == "v1.0.0"
 
 
 def test_get_version_branch() -> None:
     """Test if we get the expected tag"""
+    cwd = os.path.realpath(os.path.curdir)
+    os.chdir('./src/github_action')
     vers = Helper.get_version(repository=repo_double_branch)
+    os.chdir(cwd)
     assert vers == "feature/testing"

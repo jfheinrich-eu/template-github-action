@@ -17,7 +17,7 @@ class Helper:
     def get_version(repository: Repo = Repo) -> str:
         """Returns the package version"""
 
-        gitbase = os.path.realpath(__file__)
+        gitbase = os.path.realpath(os.path.realpath(os.path.curdir))
         while (gitbase != '/' and not os.path.exists(os.path.join(gitbase, '.git'))):
             gitbase = os.path.realpath(os.path.join(gitbase, '..'))
 
