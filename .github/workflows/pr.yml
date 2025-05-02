@@ -49,7 +49,7 @@ jobs:
         with:
           ci_api_key_id: ${{ secrets.PSONO_API_KEY_ID }}
           ci_api_secret_key_hex: ${{ secrets.PSONO_API_SECRET_KEY_HEX }}
-          ci_server_url: 'https://your-psono-server.com'
+          ci_server_url: ${{ vars.PSONO_SERVER_URL }}
           secret_id: ${{ secrets.PSONO_GITHUB_CLI_TOKEN }}
           secret_type: 'secret'
           secret_fields: 'password'
