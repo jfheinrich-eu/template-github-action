@@ -43,4 +43,3 @@ jobs:
           branch: ${{ github.ref_name }}
           commit_message: 'Updated requirements file on ${{ github.ref_name }} [skip ci]'
           file_pattern: requirements.txt
-

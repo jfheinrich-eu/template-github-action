@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """Main entrypoint for the action"""
-from github_action import GitHubAction
 import sys
+
+from github_action import GitHubAction
 sys.path.append('.')
 
 

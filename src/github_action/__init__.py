@@ -1,5 +1,4 @@
 """Modul github_action"""
-
 from github_action import config
 from github_action import main
 

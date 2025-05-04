@@ -5,8 +5,8 @@ Contains:
     - Helper
         - Helper::get_version() -> str
 """
-
 import os
+
 from git import Repo
 
 

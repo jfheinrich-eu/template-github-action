@@ -16,7 +16,6 @@ RUN rm -rf /app/__pycache__ && \
 FROM python:3.12.10-alpine3.21 AS final
 RUN apk add --update git
 COPY --from=builder /app /app
-ENV PYTHONPATH=/app:/src
-WORKDIR /src
+ENV PYTHONPATH=/app
 
 ENTRYPOINT ["/app/app.py"]

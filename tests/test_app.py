@@ -1,9 +1,11 @@
 """Test app.py"""
-from pytest import CaptureFixture
-import app
-import re
 import os
+import re
+
 import pytest
+from pytest import CaptureFixture
+
+import app
 from github_action import get_info
 
 IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"

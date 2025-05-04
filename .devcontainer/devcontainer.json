@@ -11,13 +11,14 @@
 		"ghcr.io/joshuanianji/devcontainer-features/github-cli-persistence:1": {},
 		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
 		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
-		"ghcr.io/devcontainers-extra/features/node-asdf:0": {}
+		"ghcr.io/devcontainers-extra/features/node-asdf:0": {},
+		"ghcr.io/devcontainers-extra/features/actionlint:1": {}
 	},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	"forwardPorts": [],
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "",
-	"postAttachCommand": ".devcontainer/postAttachCommands.sh",
+	"postCreateCommand": ".devcontainer/postCreateCommands.sh",
+	"postAttachCommand": "",
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
@@ -43,7 +44,8 @@
 				"ms-python.flake8",
 				"zeshuaro.vscode-python-poetry",
 				"yzhang.markdown-all-in-one",
-				"zhangxiaoqian.emoji-intellisense"
+				"zhangxiaoqian.emoji-intellisense",
+				"ms-azuretools.vscode-containers"
 			]
 		}
 	},

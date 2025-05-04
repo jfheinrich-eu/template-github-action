@@ -1,8 +1,10 @@
 """Unit Test for class libs.helper.Helper"""
+import os
+
 from git import Repo
 from git.util import IterableList
+
 from github_action.libs.helper import Helper
-import os
 
 
 class repo_double_tag(Repo):
