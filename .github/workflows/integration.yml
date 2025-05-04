@@ -12,17 +12,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.9
+      - name: Set up Python 3.12.10
         uses: actions/setup-python@v5.5.0
         with:
-          python-version: "3.9"
+          python-version: "3.12.10"
+
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install --with test
 
       - name: Lint
-        run: |
-          pip install flake8
-          cd src && flake8 *.py
+        run: poetry run flake8 src/ tests/
 
       - name: Tests
-        run: |
-          pip install pytest pytest-cov
-          pytest --cov=github-action --pyargs github-action
+        run: poetry run pytest --cov --cov-branch --cov-report xml:coverage/cov.xml --cov-report lcov:coverage/cov.info
+
+      - name: Upload results to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: jfheinrich-eu/template-github-action
+          files: coverage/cov.xml
+          verbose: true
+
+      - name: Generate Code Coverage report
+        id: code-coverage
+        uses: barecheck/code-coverage-action@v1
+        with:
+          barecheck-github-app-token: ${{ secrets.BARECHECK_GITHUB_APP_TOKEN }}
+          lcov-file: "coverage/cov.info"
+          send-summary-comment: true
+          show-annotations: ''
