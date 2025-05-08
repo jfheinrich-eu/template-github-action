@@ -6,7 +6,7 @@ rm -f install-scout.sh
 
 (gh auth status || gh auth login) && gh extension install https://github.com/nektos/gh-act
 
-pip3 install --user poetry pytest pytest-cov pytest-mock
+pip3 install --user pytest pytest-cov pytest-mock
 poetry install --with test
 
 npm ci
