@@ -1,7 +1,6 @@
 name: Create new release
 permissions:
   contents: write
-  pull-requests: write
 
 on:
   push:
@@ -18,6 +17,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Fetch secrets
+        id: fetch_secrets
+        uses: jfheinrich-eu/psono-secret-whisperer@v1.0.0
+        with:
+          ci_api_key_id: ${{ secrets.PSONO_API_KEY_ID }}
+          ci_api_secret_key_hex: ${{ secrets.PSONO_API_SECRET_KEY_HEX }}
+          ci_server_url: ${{ vars.PSONO_SERVER_URL }}
+          secret_id: ${{ secrets.RELEASE_WORKFLOW_TOKEN }}
+          secret_type: 'secret'
+          secret_fields: 'password'
+          mask_secrets: 'password'
 
       - name: Update CHANGELOG
         id: changelog
@@ -36,8 +47,11 @@ jobs:
           body: ${{ steps.changelog.outputs.changes }}
 
       - name: Commit CHANGELOG.md
-        uses: stefanzweifel/git-auto-commit-action@v5
+        if: ${{ github.ref }} == 'refs/heads/main'
+        uses: Amraneze/push-to-protected-branch@v1.5.0
         with:
-          branch: main
-          commit_message: 'docs: update CHANGELOG.md for ${{ github.ref_name }} [skip ci]'
-          file_pattern: CHANGELOG.md
+          repository: ${{ github.repository }}
+          branch_name: main
+          github_token: ${{ steps.fetch_secrets.outputs.secret1 }}
+          commit_message: 'docs: update CHANGELOG.md for ${{ github.ref_name }} on ${{ github.ref }} [skip ci]'
+          files_to_commit: CHANGELOG.md

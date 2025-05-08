@@ -9,11 +9,7 @@ dependencies:
           - package-lock.json
           - yarn.lockfile
           - requirements.txt
-deployment:
-  - changed-files:
-      - any-glob-to-any-file:
-          - netlify.toml
-          - _redirects
+          - composer.lock
 documentation:
   - changed-files:
       - any-glob-to-any-file:
@@ -23,11 +19,6 @@ github:
   - changed-files:
       - any-glob-to-any-file:
           - .github/**/*
-gitlab-c:
-  - changed-files:
-      - any-glob-to-any-file:
-          - gitlab-ci/**/*
-          - .gitlab-ci.yml
 git:
   - changed-files:
       - any-glob-to-any-file:
@@ -37,6 +28,7 @@ labels:
   - changed-files:
       - any-glob-to-any-file:
           - .github/pr_labeler.yml
+          - .github/labeler.yml
 lint:
   - changed-files:
       - any-glob-to-any-file:
