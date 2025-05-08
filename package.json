@@ -1,5 +1,5 @@
 {
     "dependencies": {
-        "@template-tools/sync-cli": "^3.5.40"
+        "@template-tools/sync-cli": "^3.5.51"
     }
 }
