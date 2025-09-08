@@ -42,6 +42,6 @@ optional = false
 pytest = "^8.3.5"
 pytest-mock = "^3.14.0"
 pytest-cov = "^6.1.1"
-flake8 = "^7.2.0"
+flake8 = "^7.3.0"
 auto8 = "^0.1.2"
 pre-commit = "^4.2.0"
